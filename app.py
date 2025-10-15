@@ -29,7 +29,7 @@ custom_ref_dir = Path("tmp/sigprofiler_references")
 custom_ref_dir.mkdir(parents=True, exist_ok=True)
 
 # Redirecionar atributos internos usados pelo pacote
-spmg.__path__[0] = str(custom_ref_dir.resolve())
+SigProfilerMatrixGenerator.__path__[0] = str(custom_ref_dir.resolve())
 
 # Forçar variáveis de ambiente (algumas funções ainda verificam)
 os.environ["SIGPROFILER_REFERENCES_PATH"] = str(custom_ref_dir.resolve())
