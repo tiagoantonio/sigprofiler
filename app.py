@@ -51,15 +51,16 @@ def setup_logging(output_dir):
     return log_file
 
 
-def ensure_genome_installed(genome_build: str, custom_genome_dir):
-    genome_path = Path.home() / f".sigProfilerMatrixGenerator/{genome_build}"
-    if genome_path.exists():
-        logging.info(f"Genome {genome_build} já está instalado.")
-    else:
-        logging.info(f"Instalando genoma {genome_build}...")
-        genInstall.install(genome_build, rsync=False, ref_path=str(custom_genome_dir))
-        logging.info("Genoma instalado com sucesso.")
+def ensure_genome_installed(genome_build: str):
+    # Redefine o HOME para uma pasta com permissão
+    os.environ["HOME"] = os.path.abspath("tmp")
 
+    genome_path = Path("tmp/.sigProfilerMatrixGenerator") / genome_build
+    if genome_path.exists():
+        st.info(f"✅ Genoma {genome_build} já instalado em {genome_path}")
+    else:
+        st.warning(f"Instalando genoma {genome_build} em {genome_path}...")
+        genInstall.install(genome_build, rsync=False, bash=True)
 
 def generate_matrices(project, genome_build, input_dir):
     logging.info(f"Gerando matrizes para {input_dir}...")
@@ -233,7 +234,7 @@ if st.button("🚀 Executar Análise"):
 
             # Setup logging
             log_path = setup_logging(output_dir)
-            ensure_genome_installed(genome, custom_genome_dir)
+            ensure_genome_installed(genome)
 
             # 🔹 Gerar matrizes
             st.info("Gerando matrizes...")
