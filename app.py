@@ -47,12 +47,6 @@ CUSTOM_REFS.mkdir(parents=True, exist_ok=True)
 os.environ["HOME"] = str(CUSTOM_HOME.resolve())
 os.environ["SIGPROFILER_REFERENCES_PATH"] = str(CUSTOM_REFS.resolve())
 
-# --- Ponto crucial ---
-# Força o módulo SigProfilerMatrixGenerator a usar nosso diretório local
-import SigProfilerMatrixGenerator
-SigProfilerMatrixGenerator.__path__ = [str((BASE_TMP / "SigProfilerMatrixGenerator").resolve())]
-
-
 # ==============================================================
 # 📦 Importações principais (após redirecionamento)
 # ==============================================================
@@ -62,7 +56,7 @@ from SigProfilerMatrixGenerator.scripts import SigProfilerMatrixGeneratorFunc as
 from SigProfilerAssignment import Analyzer as Analyze
 import sigProfilerPlotting as sigPlt
 
-
+SigProfilerMatrixGenerator.__path__ = [str((BASE_TMP / "SigProfilerMatrixGenerator").resolve())]
 # ---------------------------------------------------------
 # Configuração inicial do Streamlit
 # ---------------------------------------------------------
