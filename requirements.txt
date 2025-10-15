@@ -5,6 +5,7 @@ logging
 pathlib
 gzip
 SigProfilerAssignment
+SigProfilerMatrixGenerator
 base64
 shutil
 tempfile
