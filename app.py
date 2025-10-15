@@ -52,13 +52,8 @@ def setup_logging(output_dir):
 def ensure_genome_installed(genome_build: str):
     """Instala o genoma localmente, redirecionando referências."""
     genome_path = genome_build
-    if genome_path.exists():
-        st.info(f"✅ Genoma {genome_build} já instalado em {genome_path}")
-    st.warning(f"Instalando genoma {genome_build} em {genome_path}...")
-
     # Instala localmente, sem tocar em /site-packages
     genInstall.install(genome_build, rsync=False, bash=True)
-
     st.success(f"Genoma {genome_build} instalado localmente com sucesso!")
 
 def generate_matrices(project, genome_build, input_dir):
