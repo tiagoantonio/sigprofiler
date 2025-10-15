@@ -54,8 +54,6 @@ def ensure_genome_installed(genome_build: str):
     genome_path = genome_build
     if genome_path.exists():
         st.info(f"✅ Genoma {genome_build} já instalado em {genome_path}")
-        return
-
     st.warning(f"Instalando genoma {genome_build} em {genome_path}...")
 
     # Instala localmente, sem tocar em /site-packages
