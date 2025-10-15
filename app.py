@@ -13,22 +13,20 @@ import streamlit as st
 # 🔧 Redirecionamento seguro do SigProfiler para ambiente restrito
 # ==============================================================
 
+# --- Corrige o diretório de trabalho do SigProfiler ---
 BASE_TMP = Path("tmp")
 CUSTOM_HOME = BASE_TMP / ".sigProfilerHome"
 CUSTOM_REFS = BASE_TMP / ".sigProfilerReferences"
 CUSTOM_HOME.mkdir(parents=True, exist_ok=True)
 CUSTOM_REFS.mkdir(parents=True, exist_ok=True)
 
-# Redefinir variáveis de ambiente
 os.environ["HOME"] = str(CUSTOM_HOME.resolve())
 os.environ["SIGPROFILER_REFERENCES_PATH"] = str(CUSTOM_REFS.resolve())
 
-# Garantir que pacotes não tentem escrever em site-packages
-site_pkg_path = Path(sys.executable).parent.parent / "lib" / f"python{sys.version_info.major}.{sys.version_info.minor}" / "site-packages" / "SigProfilerMatrixGenerator"
-if site_pkg_path.exists():
-    redirected_pkg_path = CUSTOM_REFS / "SigProfilerMatrixGenerator"
-    (redirected_pkg_path / "references/chromosomes").mkdir(parents=True, exist_ok=True)
-    sys.path.insert(0, str(redirected_pkg_path.resolve()))
+# --- Ponto crucial ---
+# Força o módulo SigProfilerMatrixGenerator a usar nosso diretório local
+import SigProfilerMatrixGenerator
+SigProfilerMatrixGenerator.__path__ = [str((BASE_TMP / "SigProfilerMatrixGenerator").resolve())]
 
 # ==============================================================
 # 📦 Importações principais (após redirecionamento)
@@ -77,13 +75,26 @@ def setup_logging(output_dir):
 
 
 def ensure_genome_installed(genome_build: str):
-    genome_path = Path("tmp/.sigProfilerMatrixGenerator") / genome_build
+    """Instala o genoma localmente, redirecionando referências."""
+    genome_path = CUSTOM_REFS / genome_build
     if genome_path.exists():
         st.info(f"✅ Genoma {genome_build} já instalado em {genome_path}")
-    else:
-        st.warning(f"Instalando genoma {genome_build} em {genome_path}...")
-        genInstall.install(genome_build, rsync=False, bash=True)
-        st.success("Instalação do genoma concluída com sucesso!")
+        return
+
+    st.warning(f"Instalando genoma {genome_build} em {genome_path}...")
+
+    from SigProfilerMatrixGenerator import install as genInstall
+
+    # Instala localmente, sem tocar em /site-packages
+    genInstall.install(genome_build, rsync=False, bash=True)
+
+    # Move qualquer dado baixado acidentalmente para dentro do tmp
+    pkg_refs = Path(sys.executable).parent.parent / "lib" / f"python{sys.version_info.major}.{sys.version_info.minor}" / "site-packages" / "SigProfilerMatrixGenerator" / "references"
+    if pkg_refs.exists():
+        shutil.copytree(pkg_refs, CUSTOM_REFS, dirs_exist_ok=True)
+        shutil.rmtree(pkg_refs, ignore_errors=True)
+
+    st.success(f"Genoma {genome_build} instalado localmente com sucesso!")
 
 def generate_matrices(project, genome_build, input_dir):
     logging.info(f"Gerando matrizes para {input_dir}...")
@@ -264,6 +275,8 @@ if st.button("🚀 Executar Análise"):
 
             # 🔹 Gerar matrizes
             st.info("Gerando matrizes...")
+            SigProfilerMatrixGenerator.__path__ = [str((BASE_TMP / "SigProfilerMatrixGenerator").resolve())]
+            os.environ["SIGPROFILER_REFERENCES_PATH"] = str(CUSTOM_REFS.resolve())
             generate_matrices(project_name, genome, str(project_dir))
 
             # 🔹 Ajustar assinaturas
