@@ -52,12 +52,12 @@ def setup_logging(output_dir):
 def ensure_genome_installed(genome_build: str):
     try:
         genInstall.install(genome_build, rsync=False, bash=False) # Use bash=False, pois é mais seguro
-        st.success(f"Genoma {genome_build} instalado localmente com sucesso no diretório temporário!")
-    except Exception as e:
-        # Adicione uma verificação específica de permissão, embora a variável de ambiente deva resolver.
-        if "Permission denied" in str(e):
-            logging.error("Erro de permissão! Verifique se SIGPROFILER_REFERENCES_PATH foi configurada corretamente.")
-        raise e # Re-lança o erro
+        st.success(f"Genoma {genome_build} instalado localmente com sucesso no diretório temporário!")
+    except Exception as e:
+    # Adicione uma verificação específica de permissão, embora a variável de ambiente deva resolver.
+        if "Permission denied" in str(e):
+            logging.error("Erro de permissão! Verifique se SIGPROFILER_REFERENCES_PATH foi configurada corretamente.")
+        raise e # Re-lança o erro
 
 def generate_matrices(project, genome_build, input_dir):
     logging.info(f"Gerando matrizes para {input_dir}...")
