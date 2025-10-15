@@ -152,4 +152,148 @@ def save_results_session(project_name, results_dir):
 if "project_name" not in st.session_state:
     st.session_state["project_name"] = None
 if "results_dir" not in st.session_state:
-    st.session_state["results_
+    st.session_state["results_dir"] = None
+
+    
+with st.sidebar:
+    st.header("⚙️ Configurações da Análise")
+
+    genome = st.selectbox("Genoma de Referência", ["GRCh37", "GRCh38"])
+    exclude_groups = st.multiselect(
+        "Excluir grupos de assinaturas",
+        ["APOBEC_signatures", "UV_signatures", "Tobacco_signatures", "MMR_signatures", "MMR_deficiency_signatures","POL_deficiency_signatures",
+                                 "HR_deficiency_signatures" ,
+                                 "BER_deficiency_signatures",
+                                 "Chemotherapy_signatures",
+                                 "Immunosuppressants_signatures"
+                                 "Treatment_signatures"
+                                 "AA_signatures",
+                                 "Colibactin_signatures",
+                                 "Artifact_signatures",
+                                 "Lymphoid_signatures"]
+    )
+    contexts = st.multiselect(
+        "Contextos a plotar",
+        [6, 96, 288, 1536],
+        default=[96]
+    )
+
+    project_name = st.text_input("Nome do Projeto", "meu_projeto")
+
+
+# --- Diretórios do Projeto (Definição dinâmica) ---
+# Garante que project_name atualize os paths a cada execução
+project_root = base_dir / project_name
+project_dir = project_root / "vcfs"
+output_dir = project_root / "resultados"
+
+project_dir.mkdir(parents=True, exist_ok=True)
+output_dir.mkdir(parents=True, exist_ok=True)
+
+
+uploaded_files = st.file_uploader(
+    "📤 Envie seus arquivos .vcf (um ou vários):",
+    type=["vcf"],
+    accept_multiple_files=True
+)
+
+if uploaded_files:
+    st.success(f"{len(uploaded_files)} arquivo(s) carregado(s).")
+    valid_files = [f for f in uploaded_files]
+else:
+    st.info("Aguardando upload de arquivos .vcf...")
+
+
+# ---------------------------------------------------------
+# Botão para executar o pipeline
+# ---------------------------------------------------------
+
+if st.button("🚀 Executar Análise"):
+    if not uploaded_files:
+        st.error("Envie pelo menos um arquivo .vcf antes de iniciar.")
+        st.stop()
+
+    with st.spinner("Executando análise... isso pode levar alguns minutos."):
+        try:
+            
+            # Limpa diretórios antigos para este projeto e recria
+            if project_root.exists():
+                shutil.rmtree(project_root)
+                project_dir.mkdir(parents=True, exist_ok=True)
+                output_dir.mkdir(parents=True, exist_ok=True)
+            
+            # Salvar arquivos enviados
+            for file in valid_files:
+                target_path = project_dir / file.name
+                if file.name.endswith(".gz"):
+                    uncompressed_name = target_path.with_suffix("")
+                    with gzip.open(file, "rb") as f_in, open(uncompressed_name, "wb") as f_out:
+                        f_out.write(f_in.read())
+                    logging.info(f"Arquivo (descompactado) salvo em {uncompressed_name}")
+                else:
+                    with open(target_path, "wb") as f_out:
+                        f_out.write(file.read())
+                    logging.info(f"Arquivo salvo em {target_path}")
+
+
+            # Garantir que há pelo menos um VCF (após potencial descompactação)
+            vcfs = list(project_dir.glob("*.vcf"))
+            if not vcfs:
+                st.error("Nenhum arquivo VCF foi encontrado após o upload.")
+                st.stop()
+
+            # Setup logging
+            log_path = setup_logging(output_dir)
+            
+            # 🔹 Instalar Genoma (usará o caminho interno modificado)
+            st.info("Verificando/Instalando genoma de referência...")
+            ensure_genome_installed(genome)
+
+            # 🔹 Gerar matrizes
+            st.info("Gerando matrizes...")
+            generate_matrices(project_name, genome, str(project_dir))
+
+            # 🔹 Ajustar assinaturas
+            st.info("Ajustando assinaturas COSMIC...")
+            fit_signatures(str(project_dir), str(output_dir), genome, exclude_groups)
+
+            # 🔹 Plotar contextos
+            st.info("Gerando gráficos de contextos...")
+            plot_contexts(str(base_dir), project_name, contexts) 
+            
+            # Salva o estado da sessão
+            st.session_state["results_dir"] = str(output_dir)
+            st.session_state["project_name"] = project_name
+            
+        except Exception as e:
+            st.error(f"Erro durante a execução: {e}")
+            logging.exception("Erro no pipeline.")
+            
+# 🔹 Procurar resultados
+fit_results = list(output_dir.rglob("*.pdf"))
+plot_results = list(project_root.rglob("*.pdf"))
+pdf_files = fit_results + plot_results
+
+if pdf_files:
+    # Remove duplicatas se houver (embora seja improvável) e ordena
+    pdf_files = sorted(list(set(pdf_files)), key=lambda x: x.name)
+    
+    st.success(f"✅ Análise concluída com sucesso! Resultados para: {project_name}")
+    selected_pdf = st.selectbox("Escolha um PDF para visualizar:", pdf_files, format_func=lambda x: x.name)
+    
+    with open(selected_pdf, "rb") as f:
+        pdf_bytes = f.read()
+        b64_pdf = base64.b64encode(pdf_bytes).decode("utf-8")
+        st.markdown(f'<iframe src="data:application/pdf;base64,{b64_pdf}" width="100%" height="800px"></iframe>', unsafe_allow_html=True)
+else:
+    if st.session_state["project_name"] and st.session_state["results_dir"]:
+         st.warning("Nenhum resultado PDF foi encontrado no diretório após a execução.")
+    else:
+         st.info("Aguardando execução da análise...")
+
+
+# ---------------------------------------------------------
+# Rodapé
+# ---------------------------------------------------------
+st.markdown("---")
+st.caption("Desenvolvido por @tiagoantonio • Baseado em SigProfiler • Streamlit + boas práticas 🧬")
