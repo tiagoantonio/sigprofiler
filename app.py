@@ -60,7 +60,7 @@ def ensure_genome_installed(genome_build: str):
         st.info(f"✅ Genoma {genome_build} já instalado em {genome_path}")
     else:
         st.warning(f"Instalando genoma {genome_build} em {genome_path}...")
-        genInstall.install(genome_build, rsync=False, bash=True)
+        genInstall.install(genome_build)
 
 def generate_matrices(project, genome_build, input_dir):
     logging.info(f"Gerando matrizes para {input_dir}...")
