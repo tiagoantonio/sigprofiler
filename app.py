@@ -50,10 +50,8 @@ def setup_logging(output_dir):
 
 
 def ensure_genome_installed(genome_build: str):
-    # O SigProfilerMatrixGenerator vai usar a pasta definida em os.environ["SIGPROFILER_REFERENCES_PATH"]
-    # Você não precisa passar o path, apenas o nome do genoma
-    try:
-        genInstall.install(genome_build, rsync=False, bash=False) # Use bash=False, pois é mais seguro
+    try:
+        genInstall.install(genome_build, rsync=False, bash=False) # Use bash=False, pois é mais seguro
         st.success(f"Genoma {genome_build} instalado localmente com sucesso no diretório temporário!")
     except Exception as e:
         # Adicione uma verificação específica de permissão, embora a variável de ambiente deva resolver.
