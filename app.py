@@ -7,6 +7,19 @@ import gzip
 
 import streamlit as st
 
+base_tmp = Path("tmp")
+genome_tmp = base_tmp / ".sigProfilerMatrixGenerator"
+references_tmp = base_tmp / "sigprofiler_references"
+
+# Cria pastas se não existirem
+genome_tmp.mkdir(parents=True, exist_ok=True)
+references_tmp.mkdir(parents=True, exist_ok=True)
+
+# Redireciona variáveis de ambiente
+os.environ["HOME"] = str(base_tmp.resolve())
+os.environ["SIGPROFILER_REFERENCES_PATH"] = str(references_tmp.resolve())
+
+
 from SigProfilerMatrixGenerator import install as genInstall
 from SigProfilerMatrixGenerator.scripts import SigProfilerMatrixGeneratorFunc as matGen
 from SigProfilerAssignment import Analyzer as Analyze
@@ -52,15 +65,13 @@ def setup_logging(output_dir):
 
 
 def ensure_genome_installed(genome_build: str):
-    # Redefine o HOME para uma pasta com permissão
-    os.environ["HOME"] = os.path.abspath("tmp")
-
     genome_path = Path("tmp/.sigProfilerMatrixGenerator") / genome_build
     if genome_path.exists():
         st.info(f"✅ Genoma {genome_build} já instalado em {genome_path}")
     else:
         st.warning(f"Instalando genoma {genome_build} em {genome_path}...")
-        genInstall.install(genome_build)
+        genInstall.install(genome_build, rsync=False, bash=True)
+        st.success("Instalação do genoma concluída com sucesso!")
 
 def generate_matrices(project, genome_build, input_dir):
     logging.info(f"Gerando matrizes para {input_dir}...")
@@ -183,6 +194,9 @@ else:
 # ---------------------------------------------------------
 # Botão para executar o pipeline
 # ---------------------------------------------------------
+# --- Forçar diretórios com permissão ---
+
+
 custom_genome_dir = Path("tmp/genomes")
 custom_genome_dir.mkdir(parents=True, exist_ok=True)
 
