@@ -37,20 +37,7 @@ def safe_makedirs(path, *args, **kwargs):
 
 os.makedirs = safe_makedirs
 
-# --- Corrige o diretório de trabalho do SigProfiler ---
-BASE_TMP = Path("tmp")
-CUSTOM_HOME = BASE_TMP / ".sigProfilerHome"
-CUSTOM_REFS = BASE_TMP / ".sigProfilerReferences"
-CUSTOM_HOME.mkdir(parents=True, exist_ok=True)
-CUSTOM_REFS.mkdir(parents=True, exist_ok=True)
 
-os.environ["HOME"] = str(CUSTOM_HOME.resolve())
-os.environ["SIGPROFILER_REFERENCES_PATH"] = str(CUSTOM_REFS.resolve())
-
-# --- Ponto crucial ---
-# Força o módulo SigProfilerMatrixGenerator a usar nosso diretório local
-import SigProfilerMatrixGenerator
-SigProfilerMatrixGenerator.__path__ = [str((BASE_TMP / "SigProfilerMatrixGenerator").resolve())]
 
 # ==============================================================
 # 📦 Importações principais (após redirecionamento)
