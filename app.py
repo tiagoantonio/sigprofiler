@@ -9,55 +9,11 @@ from pathlib import Path
 
 import streamlit as st
 
-# ==============================================================
-# 🔧 Redirecionamento seguro do SigProfiler para ambiente restrito
-# ==============================================================
-# --- Forçar diretórios locais ---
-SAFE_BASE = Path("tmp")
-SAFE_REF = SAFE_BASE / "SigProfiler_safe_refs"
-SAFE_REF.mkdir(parents=True, exist_ok=True)
-
-original_makedirs = os.makedirs
-
-def safe_makedirs(path, *args, **kwargs):
-    """Redireciona qualquer tentativa de criar pastas em site-packages."""
-    try:
-        path_str = str(path)
-        if "site-packages/SigProfilerMatrixGenerator/references" in path_str:
-            rel = Path(path_str.split("SigProfilerMatrixGenerator/references")[-1].lstrip("/"))
-            new_path = SAFE_REF / rel
-            new_path.parent.mkdir(parents=True, exist_ok=True)
-            return original_makedirs(new_path, *args, **kwargs)
-        return original_makedirs(path, *args, **kwargs)
-    except PermissionError:
-        # Em último caso, redireciona tudo para tmp
-        new_path = SAFE_REF / Path(str(path)).name
-        new_path.parent.mkdir(parents=True, exist_ok=True)
-        return original_makedirs(new_path, *args, **kwargs)
-
-os.makedirs = safe_makedirs
-
-
-
-# ==============================================================
-# 📦 Importações principais (após redirecionamento)
-# ==============================================================
-
 from SigProfilerMatrixGenerator import install as genInstall
 from SigProfilerMatrixGenerator.scripts import SigProfilerMatrixGeneratorFunc as matGen
 from SigProfilerAssignment import Analyzer as Analyze
 import sigProfilerPlotting as sigPlt
-# --- Corrige o diretório de trabalho do SigProfiler ---
-BASE_TMP = Path("tmp")
-CUSTOM_HOME = BASE_TMP / ".sigProfilerHome"
-CUSTOM_REFS = BASE_TMP / ".sigProfilerReferences"
-CUSTOM_HOME.mkdir(parents=True, exist_ok=True)
-CUSTOM_REFS.mkdir(parents=True, exist_ok=True)
 
-os.environ["HOME"] = str(CUSTOM_HOME.resolve())
-os.environ["SIGPROFILER_REFERENCES_PATH"] = str(CUSTOM_REFS.resolve())
-SigProfilerMatrixGenerator.__path__ = [str((BASE_TMP / "SigProfilerMatrixGenerator").resolve())]
-# ---------------------------------------------------------
 # Configuração inicial do Streamlit
 # ---------------------------------------------------------
 st.set_page_config(
