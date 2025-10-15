@@ -50,7 +50,7 @@ def setup_logging(output_dir):
 
 
 def ensure_genome_installed(genome_build: str):
-    """Instala o genoma localmente, usando a variável de ambiente SIGPROFILER_REFERENCES_PATH."""
+    #"""Instala o genoma localmente, usando a variável de ambiente SIGPROFILER_REFERENCES_PATH."""
     # O SigProfilerMatrixGenerator vai usar a pasta definida em os.environ["SIGPROFILER_REFERENCES_PATH"]
     # Você não precisa passar o path, apenas o nome do genoma
     try:
