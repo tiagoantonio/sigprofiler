@@ -57,7 +57,7 @@ def ensure_genome_installed(genome_build: str):
         logging.info(f"Genome {genome_build} já está instalado.")
     else:
         logging.info(f"Instalando genoma {genome_build}...")
-        genInstall.install(genome_build)
+        genInstall.install(genome_build, ref_path=str(custom_genome_dir))
         logging.info("Genoma instalado com sucesso.")
 
 
@@ -182,6 +182,9 @@ else:
 # ---------------------------------------------------------
 # Botão para executar o pipeline
 # ---------------------------------------------------------
+custom_genome_dir = Path("tmp/genomes")
+custom_genome_dir.mkdir(parents=True, exist_ok=True)
+
 base_dir = Path("tmp")
 project_root = base_dir / project_name
 project_dir = project_root / "vcfs"
