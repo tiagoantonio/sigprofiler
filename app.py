@@ -4,6 +4,7 @@ import tempfile
 import logging
 from pathlib import Path
 import gzip
+import sys 
 
 # --- Diretórios com permissão ---
 base_tmp = Path("tmp")
