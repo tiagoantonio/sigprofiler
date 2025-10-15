@@ -5,6 +5,30 @@ import logging
 from pathlib import Path
 import gzip
 
+# --- Diretórios com permissão ---
+base_tmp = Path("tmp")
+custom_home = base_tmp / ".sigProfilerHome"
+custom_refs = base_tmp / ".sigProfilerReferences"
+custom_home.mkdir(parents=True, exist_ok=True)
+custom_refs.mkdir(parents=True, exist_ok=True)
+
+# --- Redirecionar variáveis de ambiente antes de qualquer import ---
+os.environ["HOME"] = str(custom_home.resolve())
+os.environ["SIGPROFILER_REFERENCES_PATH"] = str(custom_refs.resolve())
+
+# --- Interceptar o path do SigProfilerMatrixGenerator se ele já existir ---
+site_pkg_path = Path(sys.executable).parent.parent / "lib" / f"python{sys.version_info.major}.{sys.version_info.minor}" / "site-packages" / "SigProfilerMatrixGenerator"
+
+if site_pkg_path.exists():
+    # cria pasta dummy paralela para redirecionar referências
+    redirected_pkg_path = custom_refs / "SigProfilerMatrixGenerator"
+    (redirected_pkg_path / "references/chromosomes").mkdir(parents=True, exist_ok=True)
+    
+    # Inserir no sys.path antes do original
+    sys.path.insert(0, str(redirected_pkg_path.resolve()))
+
+
+
 import streamlit as st
 from SigProfilerMatrixGenerator import install as genInstall
 from SigProfilerMatrixGenerator.scripts import SigProfilerMatrixGeneratorFunc as matGen
@@ -12,6 +36,12 @@ from SigProfilerAssignment import Analyzer as Analyze
 import sigProfilerPlotting as sigPlt
 import base64
 import shutil, tempfile
+
+import os
+from pathlib import Path
+import sys
+
+
 
 
 # ---------------------------------------------------------
@@ -56,7 +86,7 @@ def ensure_genome_installed(genome_build: str):
         st.info(f"✅ Genoma {genome_build} já instalado em {genome_path}")
     else:
         st.warning(f"Instalando genoma {genome_build} em {genome_path}...")
-        genInstall.install(genome_build)
+        genInstall.install(genome_build, rsync=False, bash=True)
         st.success("Instalação do genoma concluída com sucesso!")
 
 def generate_matrices(project, genome_build, input_dir):
