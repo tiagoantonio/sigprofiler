@@ -57,7 +57,7 @@ def ensure_genome_installed(genome_build: str, custom_genome_dir):
         logging.info(f"Genome {genome_build} já está instalado.")
     else:
         logging.info(f"Instalando genoma {genome_build}...")
-        genInstall.install(genome_build, ref_path=str(custom_genome_dir))
+        genInstall.install(genome_build, rsync=False, ref_path=str(custom_genome_dir))
         logging.info("Genoma instalado com sucesso.")
 
 
