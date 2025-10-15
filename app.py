@@ -236,7 +236,7 @@ if st.button("🚀 Executar Análise"):
             CUSTOM_REFS.mkdir(parents=True, exist_ok=True)
             
             # Redireciona a instalação para o diretório personalizado
-            os.environ["SIGPROFILER_REFERENCES_PATH"] = str(CUSTOM_REFS.resolve()
+            os.environ["SIGPROFILER_REFERENCES_PATH"] = str(CUSTOM_REFS.resolve())
                                                             
             # Setup logging
             log_path = setup_logging(output_dir)
