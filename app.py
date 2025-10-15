@@ -51,23 +51,15 @@ def setup_logging(output_dir):
 
 def ensure_genome_installed(genome_build: str):
     """Instala o genoma localmente, redirecionando referências."""
-    genome_path = CUSTOM_REFS / genome_build
+    genome_path = genome_build
     if genome_path.exists():
         st.info(f"✅ Genoma {genome_build} já instalado em {genome_path}")
         return
 
     st.warning(f"Instalando genoma {genome_build} em {genome_path}...")
 
-    from SigProfilerMatrixGenerator import install as genInstall
-
     # Instala localmente, sem tocar em /site-packages
     genInstall.install(genome_build, rsync=False, bash=True)
-
-    # Move qualquer dado baixado acidentalmente para dentro do tmp
-    pkg_refs = Path(sys.executable).parent.parent / "lib" / f"python{sys.version_info.major}.{sys.version_info.minor}" / "site-packages" / "SigProfilerMatrixGenerator" / "references"
-    if pkg_refs.exists():
-        shutil.copytree(pkg_refs, CUSTOM_REFS, dirs_exist_ok=True)
-        shutil.rmtree(pkg_refs, ignore_errors=True)
 
     st.success(f"Genoma {genome_build} instalado localmente com sucesso!")
 
