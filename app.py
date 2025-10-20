@@ -67,8 +67,8 @@ def generate_matrices(project, genome_build, input_dir):
         project,
         genome_build,
         input_dir,
-        plot=True,
-        exome=False
+        plot=True
+        #exome=False
     )
 
 
